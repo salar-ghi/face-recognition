@@ -1,18 +1,16 @@
 from helpers import convert_and_trim_bb
 import argparse
-import imutils
+
 import time
 # from cvzone.FaceDetectionModule import FaceDetector
 import dlib
 import cv2
 
 ap = argparse.ArgumentParser()
-# ap.add_argument("-i", "--image", type=str, required=True, help="path to input image")
 ap.add_argument("-u", "--upsample", type=int, default=1, help="# of times to upsample")
 args = vars(ap.parse_args())
 
 cam = cv2.VideoCapture(0)
-# detect = FaceDetector()
 
 # load dlib's HOG + Linear SVM face detector
 print("[INFO] loading HOG + Linear SVM face detector...")
@@ -29,7 +27,6 @@ while True:
     # perform face detection using dlib's face detector
     start = time.time()
     print("[INFO[ performing face detection with dlib...")
-    # rects = detector(rgb, args["upsample"])
     faces = detector(gray, 1)
 
     end = time.time()

@@ -6,6 +6,18 @@ import cv2
 
 folderPath = 'dataset'
 pathList= os.listdir(folderPath)
+models = [
+  "VGG-Face", 
+  "Facenet", 
+  "Facenet512", 
+  "OpenFace", 
+  "DeepFace", 
+  "DeepID", 
+  "ArcFace", 
+  "Dlib", 
+  "SFace",
+]
+
 
 imgList = []
 EmployeeIds = []
@@ -26,12 +38,14 @@ while True:
         frames.append(frame)
     if bboxs:        
         for img in imgList:
-            verification = DeepFace.verify(img1_path =frames[0], img2_path = img)
-            if verification == True:
-                print("thats' right ")
-                x1, y1, w1, h1 = bboxs[0]['bbox']
-                x2 = x1 + w1
-                y2 = y1 + h1
+            verification = DeepFace.verify(frame, cv2.imread(img[0]) , model_name = "Facenet")
+            print("thats' right :", verification[0])
+
+            # if verification[0] == True:
+            #     print("thats' right ")
+            #     x1, y1, w1, h1 = bboxs[0]['bbox']
+            #     x2 = x1 + w1
+            #     y2 = y1 + h1
     
     cv2.imshow('Real-time Detection', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):

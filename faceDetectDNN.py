@@ -10,7 +10,7 @@ detector = FaceDetector()
 
 while True:
     ret, frame = cam.read()
-    frame, bboxs = detector.findFaces(frame)
+    _, bboxs = detector.findFaces(frame)
     if bboxs:
         x1, y1, w1, h1 = bboxs[0]['bbox']
         x2 = x1 + w1
