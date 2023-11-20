@@ -6,27 +6,52 @@ import numpy as np
 import pickle
 import cvzone
 
-print("Loading Encoded file .......")
+# face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
 file = open('EncodeFile.p', 'rb')
 encodeListKnownWithIds = pickle.load(file)
 file.close()
-
 encodeListKnown, EmployeeIds = encodeListKnownWithIds
 
-# url = "http://admin:ndcndc@192.168.10.243/1"
-cam = cv2.VideoCapture("rtsp://admin:ndcndc@192.168.10.243/")
-cam.set(3, 1020) # set width
-cam.set(4, 840) # set height
+def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
+    dim = None
+    (h, w) = image.shape[:2]
+
+    if width is None and height is None:
+        return image
+    if width is None:
+        r = height / float(h)
+        dim = (int(w * r), height)
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    return cv2.resize(image, dim, interpolation=inter)
+
+
 
 detector = FaceDetector()
+# 226
+# 243
+rtspurl =  'rtsp://admin:ndcndc@192.168.10.226:554/channel1'
+httpurl =  'http://192.168.10.226:80/video'
+cam = cv2.VideoCapture(rtspurl)
+# print(cam.grab())
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 while True:
-    _, frame = cam.read()
-    print('cannot read data from camera')
-    if _ is False:
+    ret, frame = cam.read()
+    if ret is False:
         break
+    
+    global x, y, w, h , x2
+    # global matches, faceDis, matchIndex
 
-    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    frame, bboxs = detector.findFaces(frame)
+    for bbox in bboxs:
+        x, y, w, h = bbox['bbox']
+        x2 = x + (int(w) / 2)
 
     ########################## start to recognize ##########################
     imgSmall = cv2.resize(frame, (0, 0), None, 0.25, 0.25)
@@ -34,38 +59,51 @@ while True:
 
     faceCurFrame = face_recognition.face_locations(imgSmall)
     encodeCurFrame = face_recognition.face_encodings(imgSmall, faceCurFrame)
-
-
+    
+    flag = False
     for encodeFace, faceLoc in zip(encodeCurFrame, faceCurFrame):
         matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
         faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
-        matchIndex = np.argmin(faceDis)
+        matchIndex = np.argmin(faceDis)        
+        if faceDis[matchIndex] < 0.5 and matches[matchIndex]:
+            # for bbox in bboxs:
+            #     x, y, w, h = bbox['bbox']
+            #     x2 = x + (int(w) / 2)
+            cvzone.putTextRect(frame, f'{EmployeeIds[matchIndex]}', (int(x2+45), y-20),1, 1, (0, 255, 25),(10, 10, 10, 0.1), cv2.BORDER_TRANSPARENT,1, 1)
+            cvzone.cornerRect(frame, (x, y, w, h))
+        elif faceDis[matchIndex] > 0.5 or (not matches[matchIndex]):
+            txt ="Unknown"
+            # for bbox in bboxs:
+            #     x, y, w, h = bbox['bbox']
+            #     x2 = x + (int(w) / 2)
+            cvzone.putTextRect(frame, f'{txt}', (int(x2+15), y-15),1, 1, (0, 0, 255),(255, 255, 255, 0.1), cv2.BORDER_TRANSPARENT,1, 1)
+            cvzone.cornerRect(frame, (x, y, w, h))
+            flag = True
+            break 
+        else:
+            txt ="Unknown"
+            # for bbox in bboxs:
+            #     x, y, w, h = bbox['bbox']
+            #     x2 = x + (int(w) / 2)
+            cvzone.putTextRect(frame, f'{txt}', (int(x2+15), y-15),1, 1, (0, 0, 255),(255, 255, 255, 0.9), cv2.BORDER_TRANSPARENT,1, 1)
+            cvzone.cornerRect(frame, (x, y, w, h))
+            flag = True
+            break 
 
-        frame, bboxs = detector.findFaces(frame)
-
-        if bboxs:
-            for bbox in bboxs:
-                # center = bbox["center"]
-                x1, y1, w1, h1 = bbox['bbox']
-                x2 = x1 + w1
-                y2 = y1 + h1
-                if faceDis[matchIndex] < 0.45 and matches[matchIndex]:  
-                    # print("Known User :", name)
-                    cv2.circle(frame, (x1, y1), 5, (255, 0, 75), cv2.BORDER_WRAP,)
-                    cvzone.putTextRect(frame, f'{EmployeeIds[matchIndex]}', (x1, y1),2, 2, (0, 255, 50))
-                    frame = cvzone.cornerRect(frame, (x1, y1, w1, h1))
-                else:
-                    txt = "Unknown"
-                    cv2.circle(frame, (x1, y1), 5, (0 , 25, 255), cv2.BORDER_WRAP)
-                    cvzone.putTextRect(frame, f'{txt}', (x1, y1), 2, 2, (0, 255, 45))
-                    frame = cvzone.cornerRect(frame, (x1, y1, w1, h1))
-
-                cv2.imshow("Real-time Detection", frame)
+            
+    # if flag:
+    #     txt ="Unknown"
+    #     for bbox in bboxs:
+    #         x, y, w, h = bbox['bbox']
+    #         x2 = x + (int(w) / 2)
+    #         cvzone.putTextRect(frame, f'{txt}', (int(x2+15), y-15),1, 1, (0, 255, 25),(10, 10, 10, 0.1), cv2.BORDER_TRANSPARENT,1, 1)
+    #         cvzone.cornerRect(frame, (x, y, w, h))
+    frm = ResizeWithAspectRatio(frame, width=960)
+    cv2.imshow("Real-time Detection", frm)
 
     ########################## recognition completed ##########################
     k = cv2.waitKey(30) & 0Xff
     if k == 27: # Press 'ESC' to quit
+        cam.release()
+        cv2.destroyAllWindows()
         break
-        
-cam.release()
-cv2.destroyAllWindows()
