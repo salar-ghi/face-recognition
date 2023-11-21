@@ -1,21 +1,29 @@
-import os 
 from cvzone.FaceDetectionModule import FaceDetector
 import cv2
 import face_recognition
 import numpy as np
 import pickle
 import cvzone
+# from cv2 import cuda
+import cv2
+import torch
+import os 
+# from numba import jit, cuda
 
-# face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+torch.device('cuda')
 
-file = open('EncodeFile.p', 'rb')
-encodeListKnownWithIds = pickle.load(file)
-file.close()
-encodeListKnown, EmployeeIds = encodeListKnownWithIds
+def EncodeFiles():
+    file = open('EncodeFile.p', 'rb')
+    encodeListKnownWithIds = pickle.load(file)
+    file.close()
+    return encodeListKnownWithIds
+    # 
 
 def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
     dim = None
     (h, w) = image.shape[:2]
+    r =0
 
     if width is None and height is None:
         return image
@@ -28,23 +36,27 @@ def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
 
     return cv2.resize(image, dim, interpolation=inter)
 
-
-
+encodeListKnown, EmployeeIds = EncodeFiles()
 detector = FaceDetector()
 # 226
 # 243
 rtspurl =  'rtsp://admin:ndcndc@192.168.10.226:554/channel1'
+Localurl =  'rtsp://admin:admin4763@192.168.5.190:554/'
 httpurl =  'http://192.168.10.226:80/video'
-cam = cv2.VideoCapture(rtspurl)
-# print(cam.grab())
-cam.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+resolutions = [[640, 480],[1024, 768],[1280, 704],[1920, 1088],[3840, 2144], [4032, 3040]]
+res_index = 5
+cam = cv2.VideoCapture(Localurl)
+cam.set(cv2.CAP_PROP_FPS, 30)
+cam.set(cv2.CAP_PROP_FRAME_COUNT,1)
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, resolutions[0][0])
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, resolutions[0][1])
 
 while True:
     ret, frame = cam.read()
     if ret is False:
         break
-    
+
     global x, y, w, h , x2
     # global matches, faceDis, matchIndex
 
@@ -107,3 +119,7 @@ while True:
         cam.release()
         cv2.destroyAllWindows()
         break
+
+if __name__ == '__main__':
+    # main()
+    pass
