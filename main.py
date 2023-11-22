@@ -4,14 +4,14 @@ import face_recognition
 import numpy as np
 import pickle
 import cvzone
-# from cv2 import cuda
 import cv2
 import torch
-import os 
-# from numba import jit, cuda
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.device('cuda')
+
+import tensorflow as tf
+tf.test.gpu_device_name()
 
 def EncodeFiles():
     file = open('EncodeFile.p', 'rb')
@@ -47,6 +47,7 @@ httpurl =  'http://192.168.10.226:80/video'
 resolutions = [[640, 480],[1024, 768],[1280, 704],[1920, 1088],[3840, 2144], [4032, 3040]]
 res_index = 5
 cam = cv2.VideoCapture(Localurl)
+cam.set(cv2.CAP_PROP_FOURCC ,cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 cam.set(cv2.CAP_PROP_FPS, 30)
 cam.set(cv2.CAP_PROP_FRAME_COUNT,1)
 cam.set(cv2.CAP_PROP_FRAME_WIDTH, resolutions[0][0])
