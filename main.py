@@ -14,7 +14,7 @@ import tensorflow as tf
 tf.test.gpu_device_name()
 
 def EncodeFiles():
-    file = open('EncodeFile.p', 'rb')
+    file = open('EncodeFile.json', 'rb')
     encodeListKnownWithIds = pickle.load(file)
     file.close()
     return encodeListKnownWithIds
@@ -45,15 +45,15 @@ Localurl =  'rtsp://admin:admin4763@192.168.5.190:554/'
 httpurl =  'http://192.168.10.226:80/video'
 
 resolutions = [[640, 480],[1024, 768],[1280, 704],[1920, 1088],[3840, 2144], [4032, 3040]]
-res_index = 5
-cam = cv2.VideoCapture(Localurl)
+cam = cv2.VideoCapture(0)
 cam.set(cv2.CAP_PROP_FOURCC ,cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-cam.set(cv2.CAP_PROP_FPS, 30)
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, resolutions[2][0])
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, resolutions[2][1])
+cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+cam.set(cv2.CAP_PROP_FPS, 10)
 cam.set(cv2.CAP_PROP_FRAME_COUNT,1)
-cam.set(cv2.CAP_PROP_FRAME_WIDTH, resolutions[0][0])
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, resolutions[0][1])
 
-while True:
+while cam.isOpened():
     ret, frame = cam.read()
     if ret is False:
         break
@@ -111,8 +111,8 @@ while True:
     #         x2 = x + (int(w) / 2)
     #         cvzone.putTextRect(frame, f'{txt}', (int(x2+15), y-15),1, 1, (0, 255, 25),(10, 10, 10, 0.1), cv2.BORDER_TRANSPARENT,1, 1)
     #         cvzone.cornerRect(frame, (x, y, w, h))
-    frm = ResizeWithAspectRatio(frame, width=960)
-    cv2.imshow("Real-time Detection", frm)
+    # frm = ResizeWithAspectRatio(frame, width=960)
+    cv2.imshow("Real-time Detection", frame)
 
     ########################## recognition completed ##########################
     k = cv2.waitKey(30) & 0Xff

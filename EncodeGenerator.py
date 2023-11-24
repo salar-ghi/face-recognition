@@ -19,8 +19,10 @@ for item in pathList:
 def findEncodings(imagesList):
     encodeList = []
     for img in imagesList:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        encode = face_recognition.face_encodings(img)[0]
+        # imgS = cv2.resize(img, (0, 0), None, 1, 1)
+        imgS = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # face = face_recognition.face_locations(imgS)
+        encode = face_recognition.face_encodings(imgS)[0]
         encodeList.append(encode)
     return encodeList
 
@@ -29,6 +31,6 @@ encodeListKnown = findEncodings(imgList)
 encodeListKnownWithIds = [encodeListKnown, EmployeeIds]
 print("Encoding Complete")
 
-file = open("EncodeFile.p", 'wb')
+file = open("EncodeFile.py", 'wb')
 pickle.dump(encodeListKnownWithIds, file)
 file.close()
